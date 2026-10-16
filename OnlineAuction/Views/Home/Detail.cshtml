@@ -1,0 +1,185 @@
+﻿@model OnlineAuction.Models.AuctionItem
+
+@{
+    var currentBid = Model.CurrentPrice ?? Model.StartingPrice;
+    var bidsCount = Model.Bids?.Count ?? 0;
+    var img = Model.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+}
+
+<div id="page-detail">
+
+    <div class="detail-nav">
+        <a href="/Home/Index"><button><i class="fa-solid fa-arrow-left"></i> Back</button></a>
+        <span class="sep">›</span>
+        <a href="/Home/Index"><button>Store</button></a>
+        <span class="sep">›</span>
+        <span id="d-bc-cat" style="color:var(--mid)">@Model.Category?.Name</span>
+        <span class="sep">›</span>
+        <span id="d-bc-title" style="color:var(--ink);font-weight:500">@Model.Title</span>
+    </div>
+
+    <div class="detail-grid">
+
+        <!-- LEFT SIDE -->
+        <div>
+            <div class="detail-main-img" id="d-main-img">
+                <img src="@img" style="width:100%;height:100%;object-fit:cover;" />
+            </div>
+
+            <div class="detail-thumbs" id="d-thumbs">
+                @if (Model.Images != null)
+                {
+                    foreach (var image in Model.Images)
+                    {
+                        <img src="@image.ImageUrl" style="width:60px;height:60px;object-fit:cover;" />
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div>
+
+            <div class="d-cat" id="d-cat">@Model.Category?.Name</div>
+
+            <div class="d-title" id="d-title">@Model.Title</div>
+
+            <div class="d-meta-row">
+
+                <div class="d-meta-item">
+                    <div class="d-meta-label"><i class="fa-solid fa-gavel"></i> Current Bid</div>
+                    <div class="d-meta-val accent" id="d-bid">$@currentBid</div>
+                </div>
+
+                <div class="d-meta-item">
+                    <div class="d-meta-label"><i class="fa-solid fa-flag"></i> Starting Bid</div>
+                    <div class="d-meta-val" id="d-start">$@Model.StartingPrice</div>
+                </div>
+
+                <div class="d-meta-item">
+                    <div class="d-meta-label"><i class="fa-solid fa-users"></i> Total Bids</div>
+                    <div class="d-meta-val" id="d-numbids">@bidsCount</div>
+                </div>
+
+            </div>
+
+            <!-- TIMER -->
+            <div class="d-cd-row">
+                <div class="d-cd-block"><div class="d-cd-num" id="d-d">--</div><div class="d-cd-label">Days</div></div>
+                <div class="d-cd-block"><div class="d-cd-num" id="d-h">--</div><div class="d-cd-label">Hours</div></div>
+                <div class="d-cd-block"><div class="d-cd-num" id="d-m">--</div><div class="d-cd-label">Min</div></div>
+                <div class="d-cd-block"><div class="d-cd-num" id="d-s">--</div><div class="d-cd-label">Sec</div></div>
+            </div>
+
+            <div class="d-desc" id="d-desc">
+                @Model.Description
+            </div>
+
+            <div class="d-tags" id="d-tags">
+                <span>@Model.Category?.Name</span>
+            </div>
+
+            <!-- 🔥 BID AREA -->
+            <div class="d-bid-area">
+
+                <div class="d-bid-label"><i class="fa-solid fa-gavel"></i> Place Your Bid</div>
+
+                <form asp-action="PlaceBid" method="post">
+                    <input type="hidden" name="itemId" value="@Model.Id" />
+
+                    <div class="d-bid-row">
+                        <div class="bid-wrap">
+                            <span class="bid-currency">$</span>
+                            <input type="number"
+                                   class="bid-input"
+                                   name="amount"
+                                   min="@(currentBid + 1)"
+                                   placeholder="0"
+                                   required />
+                        </div>
+
+                        <button type="submit" class="btn-place-bid">
+                            <i class="fa-solid fa-gavel"></i> Bid Now
+                        </button>
+                    </div>
+                </form>
+
+                <div class="bid-hint" id="bidHint">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Enter an amount higher than the current bid
+                </div>
+
+                <!-- 🔥 BID HISTORY -->
+                <div class="bid-history">
+                    <div class="bid-hist-title">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Recent Bids
+                    </div>
+
+                    <div id="bidHistList">
+                        @if (Model.Bids != null && Model.Bids.Any())
+                        {
+                            var highest = Model.Bids.OrderByDescending(b => b.Amount).FirstOrDefault();
+
+                            foreach (var bid in Model.Bids.OrderByDescending(b => b.BidTime).Take(5))
+                            {
+                                <div>
+                                    $@bid.Amount — @(
+                                    bid.User?.FullName
+                                    ?? bid.User?.FullName
+                                    ?? bid.User?.Email
+                                    ?? "Unknown User"
+                                                    )
+
+                                    @if (highest != null && bid.Id == highest.Id)
+                                    {
+                                        <span style="color:green; font-weight:bold;"> (Highest)</span>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div>No bids yet</div>
+                        }
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="d-actions">
+                <button class="btn-watch" id="watchBtn" onclick="toggleWatch()">
+                    <i class="fa-regular fa-heart"></i> Add to Watchlist
+                </button>
+
+                <button class="btn-share" onclick="alert('Link copied!')">
+                    <i class="fa-solid fa-share-nodes"></i> Share
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 🔥 SIMPLE COUNTDOWN SCRIPT -->
+<script>
+    const endTime = new Date("@Model.EndTime.ToString("yyyy-MM-ddTHH:mm:ss")");
+
+    function updateTimer() {
+        const now = new Date();
+        const diff = endTime - now;
+
+        if (diff <= 0) return;
+
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((diff / (1000 * 60)) % 60);
+        const s = Math.floor((diff / 1000) % 60);
+
+        document.getElementById("d-d").innerText = d;
+        document.getElementById("d-h").innerText = h;
+        document.getElementById("d-m").innerText = m;
+        document.getElementById("d-s").innerText = s;
+    }
+
+    setInterval(updateTimer, 1000);
+</script>

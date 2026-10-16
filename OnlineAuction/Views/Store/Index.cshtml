@@ -1,0 +1,315 @@
+﻿@model List<OnlineAuction.Models.AuctionItem>
+
+<div id="page-store">
+    <div class="page-header">
+        <div class="page-header-inner">
+            <div class="eyebrow"><i class="fa-solid fa-store"></i> All Lots</div>
+            <h1>Auction Store</h1>
+            <p>Browse all active lots — bid, watch, and win extraordinary items.</p>
+        </div>
+    </div>
+
+    <div class="store-bar">
+        <div class="store-bar-inner">
+            <div class="bar-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Search all lots…" id="storeSearch" oninput="handleStoreSearch(this.value)">
+            </div>
+
+            <select class="bar-sort" onchange="handleSort(this.value)">
+                <option value="default">Sort: Featured</option>
+                <option value="bid-asc">Bid: Low → High</option>
+                <option value="bid-desc">Bid: High → Low</option>
+                <option value="ending">Ending Soon</option>
+                <option value="newest">Newest First</option>
+            </select>
+
+            <button class="bar-filter-btn sb-toggle" onclick="toggleSidebar()">
+                <i class="fa-solid fa-sliders"></i> Filters
+            </button>
+
+            <span class="bar-count">@Model?.Count ?? 0 lots</span>
+        </div>
+    </div>
+
+    <div class="store-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sb-section">
+                <div class="sb-title"><i class="fa-solid fa-grid-2"></i> Category</div>
+                <div class="sb-links" id="sbCats">
+                    <button class="sb-link active" onclick="StoreCat('All', this)">All Items</button>
+                    <button class="sb-link" onclick="StoreCat('Electronics', this)">Electronics</button>
+                    <button class="sb-link" onclick="StoreCat('Art', this)">Art & Antiques</button>
+                    <button class="sb-link" onclick="StoreCat('Watches', this)">Watches</button>
+                    <button class="sb-link" onclick="StoreCat('Fashion', this)">Fashion</button>
+                    <button class="sb-link" onclick="StoreCat('Collectibles', this)">Collectibles</button>
+                    <button class="sb-link" onclick="StoreCat('Vehicles', this)">Vehicles</button>
+                </div>
+            </div>
+
+            <div class="sb-section">
+                <div class="sb-title"><i class="fa-solid fa-tag"></i> Price Range</div>
+                <div class="price-row">
+                    <input type="number" class="price-input" placeholder="Min $">
+                    <span class="price-sep">—</span>
+                    <input type="number" class="price-input" placeholder="Max $">
+                </div>
+            </div>
+
+            <div class="sb-section">
+                <div class="sb-title"><i class="fa-solid fa-fire-flame-curved"></i> Status</div>
+                <div class="sb-links" id="sbStatus">
+                    <button class="sb-link" onclick="storeStatus('ending', this)">Ending Soon</button>
+                    <button class="sb-link" onclick="storeStatus('live', this)">Live Now</button>
+                    <button class="sb-link" onclick="storeStatus('new', this)">Newly Listed</button>
+                    <button class="sb-link active" onclick="storeStatus('', this)">Show All</button>
+                </div>
+            </div>
+        </aside>
+
+        <div>
+            <div class="product-grid" id="storeGrid">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var p in Model)
+                    {
+                        var image = (p.Images != null && p.Images.Any())
+                            ? p.Images.First().ImageUrl
+                            : "/images/no-image.png";
+
+                        var bids = p.Bids?.Count ?? 0;
+
+                        var price = p.CurrentPrice ?? p.StartingPrice;
+
+                        var remaining = (p.EndTime - DateTime.Now).TotalHours;
+                        var timerText = remaining > 0
+                            ? (remaining > 24
+                                ? $"{(int)(remaining / 24)}d {(int)(remaining % 24)}h"
+                                : $"{(int)remaining}h")
+                            : "Ended";
+
+                        <a href="/Store/Detail/@p.Id" class="product-card" data-category="@p.Category?.Name">
+                            <div class="card-img-wrap">
+                                <img src="@image" class="card-img" />
+                            </div>
+
+                            <div class="card-body">
+                                <div class="card-cat">@p.Category?.Name</div>
+                                <div class="card-title">@p.Title</div>
+
+                                <div class="card-bid-row">
+                                    <div>
+                                        <div class="card-bid-label">Current Bid</div>
+                                        <div class="card-bid-amt">$@price</div>
+                                    </div>
+
+                                    <div class="card-timer">
+                                        <i class="fa-regular fa-clock"></i> @timerText
+                                    </div>
+                                </div>
+
+                                <div class="card-bids">
+                                    <i class="fa-solid fa-users"></i>
+                                    @bids bid@(bids != 1 ? "s" : "")
+                                </div>
+                            </div>
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="empty">
+                        <i class="fa-regular fa-face-sad-tear"></i>
+                        <div class="empty-title">No lots found</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const storeGrid = document.getElementById("storeGrid");
+    const storeCards = Array.from(storeGrid.querySelectorAll(".product-card"));
+    const storeCount = document.querySelector(".bar-count");
+
+    let currentCategory = "All";
+    let currentStatus = "";
+    let searchTerm = "";
+
+
+
+    // --- STATUS FILTER ---
+    window.storeStatus = function(status, btn) {
+        currentStatus = status;
+
+        document.querySelectorAll('#sbStatus .sb-link').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        applyFilters();
+    };
+
+    // --- SEARCH BAR (do not touch) ---
+    window.handleStoreSearch = function(val) {
+        searchTerm = val.toLowerCase();
+        applyFilters();
+    };
+
+    // --- SORT DROPDOWN (do not touch) ---
+    window.handleSort = function(type) {
+        let sortedCards = storeCards.slice();
+
+        sortedCards.sort((a, b) => {
+            const aPrice = parseFloat(a.querySelector(".card-bid-amt").textContent.replace(/[^0-9.-]+/g,""));
+            const bPrice = parseFloat(b.querySelector(".card-bid-amt").textContent.replace(/[^0-9.-]+/g,""));
+
+            const aTime = a.querySelector(".card-timer").textContent;
+            const bTime = b.querySelector(".card-timer").textContent;
+
+            const aStart = parseCardTime(aTime);
+            const bStart = parseCardTime(bTime);
+
+            switch(type) {
+                case "bid-asc": return aPrice - bPrice;
+                case "bid-desc": return bPrice - aPrice;
+                case "ending": return aStart - bStart; // soonest ending first
+                case "newest": return bStart - aStart; // newest first
+                default: return 0;
+            }
+        });
+
+        storeGrid.innerHTML = "";
+        sortedCards.forEach(c => storeGrid.appendChild(c));
+    };
+
+    // --- APPLY FILTERS FUNCTION ---
+    function applyFilters() {
+        let visibleCount = 0;
+
+        storeCards.forEach(card => {
+            const category = card.dataset.category;
+            const title = card.querySelector(".card-title").textContent.toLowerCase();
+            const timerText = card.querySelector(".card-timer").textContent;
+
+            let show = true;
+
+            // CATEGORY FILTER
+            if (currentCategory !== "All" && category !== currentCategory) show = false;
+
+            // STATUS FILTER
+            if (currentStatus === "ending" && !timerText.includes("h")) show = false;
+            if (currentStatus === "live" && timerText === "Ended") show = false;
+            // "new" status requires data-new attribute in Razor (optional)
+
+            // SEARCH BAR FILTER
+            if (searchTerm && !title.includes(searchTerm)) show = false;
+
+            card.style.display = show ? "block" : "none";
+            if (show) visibleCount++;
+        });
+
+        // UPDATE LOT COUNT
+        storeCount.textContent = `${visibleCount} lot${visibleCount !== 1 ? 's' : ''}`;
+    }
+
+    // --- UTILITY: PARSE TIMER ---
+    function parseCardTime(text) {
+        if (text === "Ended") return 0;
+        let hours = 0;
+        if (text.includes("d")) {
+            const parts = text.split("d");
+            hours += parseInt(parts[0].trim()) * 24;
+            hours += parseInt(parts[1].replace("h","").trim());
+        } else {
+            hours += parseInt(text.replace("h","").trim());
+        }
+        return hours;
+    }
+
+    // INITIAL FILTER
+    applyFilters();
+});
+
+    document.addEventListener("DOMContentLoaded", function() {
+        window.StoreCat = function(category, btn) {
+            // Highlight selected button
+                document.querySelectorAll('.sb-link').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Show/hide cards
+            const cards = document.querySelectorAll('.product-card');
+            let visibleCount = 0;
+            cards.forEach(card => {
+                if (category === 'All' || card.dataset.category === category) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Update "Showing X items"
+            document.getElementById('homeCount').textContent =
+                `Showing ${visibleCount} item${visibleCount !== 1 ? 's' : ''}`;
+
+            // Show empty message if none
+            document.getElementById('homeEmpty').style.display = visibleCount === 0 ? 'block' : 'none';
+        };
+
+        // Initialize "All" filter
+            Cat('All', document.querySelector('.sb-link .active'));
+    });
+
+        let currentStatus = "";
+
+        window.storeStatus = function(status, btn) {
+            currentStatus = status;
+
+            // Active button UI
+            document.querySelectorAll('#sbStatus .sb-link')
+                .forEach(b => b.classList.remove('active'));
+
+            btn.classList.add('active');
+
+            applyFilters();
+        };
+
+        function applyFilters() {
+            const cards = document.querySelectorAll(".product-card");
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const timerText = card.querySelector(".card-timer").textContent;
+
+                let show = true;
+
+                // 🔥 STATUS LOGIC
+                if (currentStatus === "ending") {
+                    // show items ending soon (hours left)
+                    if (!timerText.includes("h") || timerText.includes("d")) show = false;
+                }
+
+                if (currentStatus === "live") {
+                    // hide ended ones
+                    if (timerText === "Ended") show = false;
+                }
+
+                if (currentStatus === "new") {
+                    // needs data-new="true" in HTML
+                    if (card.dataset.new !== "true") show = false;
+                }
+
+                card.style.display = show ? "block" : "none";
+
+                if (show) visibleCount++;
+            });
+
+            // update count if exists
+            const countEl = document.querySelector(".bar-count");
+            if (countEl) {
+                countEl.textContent = `${visibleCount} lot${visibleCount !== 1 ? 's' : ''}`;
+            }
+        }
+</script>

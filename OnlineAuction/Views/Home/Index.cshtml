@@ -1,0 +1,204 @@
+﻿@model List<OnlineAuction.Models.AuctionItem>
+
+<div id="page-home">
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="eyebrow"><i class="fa-solid fa-signal-stream"></i> Live Auctions Now</div>
+    <h1>Bid. Win. <em>Treasure.</em></h1>
+    <p>Discover rare finds and extraordinary items from collectors and dealers worldwide.</p>
+    <div class="hero-ctas">
+      <a asp-controller="Store" asp-action="Index" class="btn-primary">
+    <i class="fa-solid fa-store"></i> Browse Auctions
+    </a>
+
+    <a asp-controller="Home" asp-action="About" class="btn-outline-dk">
+    <i class="fa-regular fa-circle-play"></i> How It Works
+    </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">12,400+</div><div class="stat-label">Active Listings</div></div>
+      <div class="stat"><div class="stat-num">84,000+</div><div class="stat-label">Registered Bidders</div></div>
+      <div class="stat"><div class="stat-num">$42M+</div><div class="stat-label">Items Sold</div></div>
+      <div class="stat"><div class="stat-num">98%</div><div class="stat-label">Satisfaction Rate</div></div>
+    </div>
+  </section>
+
+  <!-- Category Filter -->
+   <div class="cat-strip">
+        <div class="cat-strip-inner">
+            <button class="cat-pill active" onclick="homeCat('All', this)"><i class="fa-solid fa-border-all"></i> All</button>
+            <button class="cat-pill" onclick="homeCat('Electronics', this)"><i class="fa-solid fa-laptop"></i> Electronics</button>
+            <button class="cat-pill" onclick="homeCat('Art', this)"><i class="fa-solid fa-palette"></i> Art</button>
+            <button class="cat-pill" onclick="homeCat('Watches', this)"><i class="fa-solid fa-clock"></i> Watches</button>
+            <button class="cat-pill" onclick="homeCat('Fashion', this)"><i class="fa-solid fa-bag-shopping"></i> Fashion</button>
+            <button class="cat-pill" onclick="homeCat('Collectibles', this)"><i class="fa-solid fa-trophy"></i> Collectibles</button>
+            <button class="cat-pill" onclick="homeCat('Vehicles', this)"><i class="fa-solid fa-car"></i> Vehicles</button>
+        </div>
+   </div>
+
+  <!-- Featured Banner -->
+  <div class="section" style="padding-bottom:0">
+    <div class="featured-banner">
+      <div class="ft-text">
+        <div class="ft-tag"><i class="fa-solid fa-star"></i> Featured Auction</div>
+        <div class="ft-title">1967 Rolex Submariner<br>Ref. 5513 — Matte Dial</div>
+        <div class="ft-desc">Exceptionally preserved example with original bracelet. One of the most sought-after Submariners among serious collectors.</div>
+        <div class="ft-meta">
+          <div><div class="ft-meta-label">Current Bid</div><div class="ft-meta-val">$28,400</div></div>
+          <div><div class="ft-meta-label">Est. Value</div><div class="ft-meta-val">$35,000+</div></div>
+        </div>
+        <div style="margin-top:24px"><button class="btn-primary"><i class="fa-solid fa-gavel"></i> View & Bid</button></div>
+      </div>
+      <div class="ft-cd">
+        <div class="cd-block"><div class="cd-num" id="cd-h">08</div><div class="cd-unit">Hours</div></div>
+        <div class="cd-block"><div class="cd-num" id="cd-m">44</div><div class="cd-unit">Min</div></div>
+        <div class="cd-block"><div class="cd-num" id="cd-s">12</div><div class="cd-unit">Sec</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Auctions Section -->
+  <div class="section">
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-title">Live Auctions</div>
+        @{
+    var itemCount = Model?.Count ?? 0;
+}
+
+<div class="sec-sub" id="homeCount">
+    Showing @itemCount item@(itemCount != 1 ? "s" : "")
+</div>
+      </div>
+      <a asp-controller="Store" asp-action="Index" class="see-all">
+    View all <i class="fa-solid fa-arrow-right"></i>
+</a>
+    </div>
+
+    <div class="product-grid" id="homeGrid">
+      @if (Model != null && Model.Any())
+      {
+          @foreach (var p in Model)
+          {
+              var ic = p.Category?.Name switch
+              {
+                  "Watches" => "fa-solid fa-watch",
+                  "Art" => "fa-solid fa-palette",
+                  "Electronics" => "fa-solid fa-tv",
+                  "Collectibles" => "fa-solid fa-gem",
+                  "Fashion" => "fa-solid fa-shirt",
+                  "Vehicles" => "fa-solid fa-car",
+                  _ => "fa-solid fa-box"
+              };
+
+              var remaining = p.EndTime - DateTime.Now;
+              string timerText = remaining.TotalSeconds <= 0 
+                  ? "Ended" 
+                  : $"{(remaining.Days > 0 ? remaining.Days + "d " : "")}{remaining.Hours}h";
+
+              bool isEnding = remaining.TotalHours < 24 && !p.IsClosed;
+              bool isNew = (DateTime.Now - p.StartTime).TotalDays < 3;
+
+              string badgeClass = isEnding ? "badge-ending" : isNew ? "badge-new" : "badge-live";
+              string badgeIcon = isEnding ? "fa-solid fa-fire-flame-curved" :
+                                 isNew ? "fa-solid fa-sparkles" :
+                                 "fa-solid fa-circle";
+              string badgeText = isEnding ? "Ending Soon" : isNew ? "New" : "Live";
+
+              var currentBid = p.CurrentPrice ?? p.StartingPrice;
+              var bidsCount = p.Bids?.Count ?? 0;
+              var img = p.Images?.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png";
+
+              <a asp-action="Detail" asp-route-id="@p.Id" class="product-card" data-category="@p.Category?.Name">
+                  <div class="card-img-wrap">
+                      <img src="@img" class="card-img" />
+                      <span class="card-badge @badgeClass">
+                          <i class="@badgeIcon" style="font-size:10px"></i> @badgeText
+                      </span>
+                      <button class="card-fav" onclick="event.preventDefault();toggleFav(this)">
+                          <i class="fa-regular fa-heart"></i>
+                      </button>
+                  </div>
+
+                  <div class="card-body">
+                      <div class="card-cat">@p.Category?.Name</div>
+                      <div class="card-title">@p.Title</div>
+
+                      <div class="card-bid-row">
+                          <div>
+                              <div class="card-bid-label">Current Bid</div>
+                              <div class="card-bid-amt">$@String.Format("{0:N0}", currentBid)</div>
+                          </div>
+                          <div class="card-timer">
+                              <i class="fa-regular fa-clock"></i>
+                              <span class="timer-text">@timerText</span>
+                          </div>
+                      </div>
+
+                      <div class="card-bids">
+                          <i class="fa-solid fa-users"></i>
+                          @bidsCount bid@(bidsCount != 1 ? "s" : "")
+                      </div>
+
+                      <form asp-action="PlaceBid" method="post" onclick="event.stopPropagation();">
+                          <input type="hidden" name="itemId" value="@p.Id" />
+                          <button type="submit" class="btn-bid">
+                              <i class="fa-solid fa-gavel"></i> Place a Bid
+                          </button>
+                      </form>
+                  </div>
+              </a>
+          }
+      }
+      else
+      {
+          <div id="homeEmpty" class="empty">
+              <i class="fa-regular fa-face-sad-tear"></i>
+              <div class="empty-title">No auctions found</div>
+              <div class="empty-sub">Try a different category</div>
+          </div>
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+    .badge-ending { background-color: #e74c3c; color: #fff; }
+    .badge-new { background-color: #3498db; color: #fff; }
+    .badge-live { background-color: #27ae60; color: #fff; }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    window.homeCat = function(category, btn) {
+        // Highlight selected button
+        document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Show/hide cards
+        const cards = document.querySelectorAll('.product-card');
+        let visibleCount = 0;
+        cards.forEach(card => {
+            if (category === 'All' || card.dataset.category === category) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Update "Showing X items"
+        document.getElementById('homeCount').textContent =
+            `Showing ${visibleCount} item${visibleCount !== 1 ? 's' : ''}`;
+
+        // Show empty message if none
+        document.getElementById('homeEmpty').style.display = visibleCount === 0 ? 'block' : 'none';
+    };
+
+    // Initialize "All" filter
+    homeCat('All', document.querySelector('.cat-pill.active'));
+});
+
+</script>
+
+

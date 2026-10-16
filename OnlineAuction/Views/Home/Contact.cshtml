@@ -1,0 +1,82 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+<div>
+    <div class="page-header">
+        <div class="page-header-inner">
+            <div class="eyebrow"><i class="fa-solid fa-headset"></i> Support</div>
+            <h1>Get in Touch</h1>
+            <p>Have a question about an auction or need help? We're here for you.</p>
+        </div>
+    </div>
+
+    <div class="contact-layout">
+        <div class="cf-card">
+            <div id="cfWrap">
+                <div class="cf-title">Send Us a Message</div>
+                <div class="cf-sub">We respond to all enquiries within one business day.</div>
+                <div class="form-row">
+                    <div class="fg"><label class="f-label"><i class="fa-solid fa-user"></i> First Name</label><input type="text" class="f-input" id="cf-fn" placeholder="James"></div>
+                    <div class="fg"><label class="f-label"><i class="fa-solid fa-user"></i> Last Name</label><input type="text" class="f-input" id="cf-ln" placeholder="Harrow"></div>
+                </div>
+                <div class="fg"><label class="f-label"><i class="fa-solid fa-envelope"></i> Email Address</label><input type="email" class="f-input" id="cf-em" placeholder="james@example.com"></div>
+                <div class="fg">
+                    <label class="f-label"><i class="fa-solid fa-tag"></i> Subject</label>
+                    <select class="f-select f-input" id="cf-sub">
+                        <option value="">Select a subject…</option>
+                        <option>Bidding & Auctions</option>
+                        <option>Selling an Item</option>
+                        <option>Payment & Fees</option>
+                        <option>Shipping & Delivery</option>
+                        <option>Account & Security</option>
+                        <option>Press & Partnerships</option>
+                        <option>Other Enquiry</option>
+                    </select>
+                </div>
+                <div class="fg"><label class="f-label"><i class="fa-solid fa-message"></i> Message</label><textarea class="f-textarea" id="cf-msg" placeholder="Tell us how we can help…"></textarea></div>
+                <button class="f-submit" onclick="submitForm()"><i class="fa-solid fa-paper-plane"></i> Send Message</button>
+            </div>
+            <div class="form-success" id="cfSuccess">
+                <div class="fs-icon"><i class="fa-solid fa-check"></i></div>
+                <div class="fs-title">Message Sent!</div>
+                <div class="fs-msg">Thanks for reaching out. Our team will get back to you within one business day.</div>
+                <button class="btn-primary" onclick="resetForm()" style="margin:0 auto"><i class="fa-solid fa-rotate-left"></i> Send Another</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="ci-card">
+                <div class="ci-title">Contact Information</div>
+                <div class="ci-item"><div class="ci-icon"><i class="fa-solid fa-location-dot"></i></div><div><div class="ci-label">Address</div><div class="ci-val">123 Auction Lane<br>London, EC1A 1BB, UK</div></div></div>
+                <div class="ci-item"><div class="ci-icon"><i class="fa-solid fa-phone"></i></div><div><div class="ci-label">Phone</div><div class="ci-val">+44 20 7946 0958</div></div></div>
+                <div class="ci-item"><div class="ci-icon"><i class="fa-solid fa-envelope"></i></div><div><div class="ci-label">Email</div><div class="ci-val">hello@gavel.auction</div></div></div>
+                <div class="ci-item"><div class="ci-icon"><i class="fa-solid fa-clock"></i></div><div><div class="ci-label">Support Hours</div><div class="ci-val">Mon – Fri, 9am – 6pm GMT</div></div></div>
+            </div>
+            <div class="cs-card">
+                <div class="cs-title">Follow GAVEL</div>
+                <div class="cs-sub">Stay updated on new lots and upcoming auctions.</div>
+                <div class="cs-links">
+                    <div class="cs-link"><i class="fa-brands fa-x-twitter"></i> GavelAuction</div>
+                    <div class="cs-link"><i class="fa-brands fa-instagram"></i> gavel.auction</div>
+                    <div class="cs-link"><i class="fa-brands fa-linkedin-in"></i> GAVEL Auction House</div>
+                    <div class="cs-link"><i class="fa-brands fa-facebook-f"></i> Gavel Online Auctions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="faq-bg">
+        <div class="faq-wrap">
+            <div class="faq-title">Frequently Asked Questions</div>
+            <div class="faq-sub">Quick answers to our most common enquiries.</div>
+            <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How do I register and start bidding? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Registration is free and takes under two minutes. Once registered, verify your email and add a payment method to unlock bidding on any live auction.</div></div>
+            <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Is there a buyer's premium? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Yes — GAVEL charges a 15% buyer's premium on the final hammer price. This covers authentication, payment processing, and platform fees. No other hidden charges apply.</div></div>
+            <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How does shipping work for international buyers? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">We partner with specialist fine-art and collectibles shippers worldwide. Shipping costs are quoted after auction and depend on item size, weight, and destination. All items are fully insured in transit.</div></div>
+            <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Can I sell an item on GAVEL? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Absolutely. Submit your item via our Seller Portal for review. Our expert team assesses authenticity and market value before listing. We charge a 10% seller's commission on the final sale price.</div></div>
+            <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What happens if I win an auction? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">You'll receive a winning confirmation email with payment instructions. Payment must be completed within 48 hours. Once cleared, we arrange shipping or collection directly with you.</div></div>
+        </div>
+    </div>
+</div>

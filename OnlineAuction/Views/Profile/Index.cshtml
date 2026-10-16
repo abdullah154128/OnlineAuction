@@ -1,0 +1,433 @@
+﻿@{
+    Layout = "_DashboardLayout";
+}
+@model ProfileViewModel
+
+<div id="page-profile">
+    <div class="dash-page">
+
+        <!-- SIDEBAR -->
+        <aside class="dash-sidebar" id="profileSidebar">
+
+            <div class="dash-sidebar-logo" onclick="window.location.href='@Url.Action("Index", "Home")'">
+                <i class="fa-solid fa-gavel"></i>GAVEL<span>.</span>
+            </div>
+
+            <span class="dash-nav-label">My Dashboard</span>
+
+            <button class="dash-nav-item active" id="pnav-overview" onclick="showProfilePanel('overview')">
+                <i class="fa-solid fa-grid-2"></i> Overview
+            </button>
+
+            <button class="dash-nav-item" id="pnav-listings" onclick="showProfilePanel('listings')">
+                <i class="fa-solid fa-tags"></i> My Listings
+            </button>
+
+            <button class="dash-nav-item" id="pnav-list-product" onclick="showProfilePanel('list-product')">
+                <i class="fa-solid fa-plus-circle"></i> List a Product
+            </button>
+
+            <button class="dash-nav-item" id="pnav-bids" onclick="showProfilePanel('bids')">
+                <i class="fa-solid fa-gavel"></i> My Bids
+            </button>
+
+            <button class="dash-nav-item" id="pnav-settings" onclick="showProfilePanel('settings')">
+                <i class="fa-solid fa-gear"></i> Account Settings
+            </button>
+
+            <div class="dash-nav-div"></div>
+
+            <button class="dash-nav-item" onclick="window.location.href='@Url.Action("Index", "Home")'">
+                <i class="fa-solid fa-arrow-left"></i> Back to Site
+            </button>
+
+            <button class="dash-nav-item" onclick="window.location.href='@Url.Action("Logout", "Account")'">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+
+            <div class="dash-sidebar-footer">
+                <div class="dash-sidebar-user">
+                    <div class="dash-sidebar-avatar">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+
+                    <div>
+                        <div class="dash-sidebar-name">@Model.User.FullName</div>
+                        <div class="dash-sidebar-role">@Model.User.Role</div>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN -->
+        <main class="dash-main">
+
+            <!-- TOPBAR -->
+            <div class="dash-topbar">
+
+                <div>
+                    <div class="dash-page-title" id="profilePageTitle">Overview</div>
+                    <div class="dash-page-sub" id="profilePageSub">
+                        Welcome back, @Model.User.FullName
+                    </div>
+                </div>
+
+                <button class="dash-mob-toggle" onclick="toggleProfileSidebar()">
+                    <i class="fa-solid fa-bars"></i> Menu
+                </button>
+
+            </div>
+
+
+            <!-- OVERVIEW PANEL -->
+            <div class="dash-panel active" id="pp-overview">
+
+                <div class="dash-stats">
+
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon accent">
+                            <i class="fa-solid fa-tags"></i>
+                        </div>
+                        <div class="dash-stat-num">@Model.Listings.Count</div>
+                        <div class="dash-stat-label">Active Listings</div>
+                    </div>
+
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon gold">
+                            <i class="fa-solid fa-gavel"></i>
+                        </div>
+                        <div class="dash-stat-num">@Model.Bids.Count</div>
+                        <div class="dash-stat-label">Bids Placed</div>
+                    </div>
+
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon green">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <div class="dash-stat-num">
+                            @Model.Bids.Count(b => b.AuctionItem.IsClosed && b.Amount == b.AuctionItem.CurrentPrice)
+                        </div>
+                        <div class="dash-stat-label">Auctions Won</div>
+                    </div>
+
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon ink">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                        <div class="dash-stat-num">0</div>
+                        <div class="dash-stat-label">Watchlist</div>
+                    </div>
+
+                </div>
+
+
+                <div class="dash-section">
+
+                    <div class="dash-section-hdr">
+                        <div class="dash-section-title">
+                            <i class="fa-solid fa-tags"></i> Recent Listings
+                        </div>
+
+                        <button class="btn-tbl view" onclick="showProfilePanel('listings')">
+                            <i class="fa-solid fa-arrow-right"></i> View All
+                        </button>
+                    </div>
+
+                    <div class="dash-section-body" style="padding:0">
+
+                        <div style="overflow-x:auto">
+
+                            <table class="dash-table">
+
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Category</th>
+                                        <th>Start Bid</th>
+                                        <th>Current Bid</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    @foreach (var item in Model.Listings.Take(5))
+                                    {
+                                        <tr>
+                                            <td>@item.Title</td>
+                                            <td>@item.Category.Name</td>
+                                            <td>$@item.StartingPrice</td>
+                                            <td>$@(item.CurrentPrice ?? item.StartingPrice)</td>
+                                            <td>@(item.IsClosed ? "Closed" : "Active")</td>
+                                        </tr>
+                                    }
+
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- LISTINGS PANEL -->
+            <div class="dash-panel" id="pp-listings">
+
+                <div class="dash-section">
+
+                    <div class="dash-section-hdr">
+                        <div class="dash-section-title">
+                            <i class="fa-solid fa-tags"></i> My Listings
+                        </div>
+                    </div>
+
+                    <div style="overflow-x:auto">
+
+                        <table class="dash-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Category</th>
+                                    <th>Start Bid</th>
+                                    <th>Current Bid</th>
+                                    <th>Status</th>
+                                    <th>Actions</th> <!-- new column -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Listings)
+                                {
+                                    <tr data-id="@item.Id"
+                                        data-title="@Html.Raw(item.Title)"
+                                        data-category="@Html.Raw(item.Category.Name)"
+                                        data-startingprice="@item.StartingPrice"
+                                        data-description="@Html.Raw(item.Description)">
+                                        <td>@item.Title</td>
+                                        <td>@item.Category.Name</td>
+                                        <td>$@item.StartingPrice</td>
+                                        <td>$@(item.CurrentPrice ?? item.StartingPrice)</td>
+                                        <td>@(item.IsClosed ? "Closed" : "Active")</td>
+                                        <td>
+                                            <button class="btn-tbl edit" onclick="openProductModal(@item.Id)">
+                                                <i class="fa-solid fa-pen"></i> Edit
+                                            </button>
+                                            <button type="button" class="btn-tbl del" onclick="openConfirmDelete('product', @item.Id)">
+                                                <i class="fa-solid fa-trash"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- LIST PRODUCT PANEL -->
+            <div class="dash-panel" id="pp-list-product">
+                <div class="dash-section">
+                    <div class="dash-section-hdr">
+                        <div class="dash-section-title"><i class="fa-solid fa-plus-circle"></i> List a New Product</div>
+                    </div>
+                    <div class="dash-section-body">
+
+                        <form asp-action="CreateListing" method="post" enctype="multipart/form-data">
+
+                            <div class="modal-row" style="margin-bottom:16px">
+                                <div class="modal-field">
+                                    <label class="modal-label"><i class="fa-solid fa-tag"></i> Item Title</label>
+                                    <input class="modal-input" name="Title" placeholder="e.g. 1967 Rolex Submariner" required />
+                                </div>
+
+                                <div class="modal-field">
+                                    <label class="modal-label"><i class="fa-solid fa-grid-2"></i> Category</label>
+                                    <select class="modal-select" name="CategoryId" required>
+                                        <option value="">Select category…</option>
+                                        @foreach (var cat in ViewBag.Categories)
+                                        {
+                                            <option value="@cat.Id">@cat.Name</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="modal-row" style="margin-bottom:16px">
+                                <div class="modal-field">
+                                    <label class="modal-label"><i class="fa-solid fa-dollar-sign"></i> Starting Bid ($)</label>
+                                    <input class="modal-input" name="StartingPrice" type="number" placeholder="500" required />
+                                </div>
+
+                                <div class="modal-field">
+                                    <label class="modal-label"><i class="fa-solid fa-clock"></i> Duration</label>
+                                    <select class="modal-select" name="DurationDays" required>
+                                        <option value="3">3 Days</option>
+                                        <option value="5">5 Days</option>
+                                        <option value="7" selected>7 Days</option>
+                                        <option value="10">10 Days</option>
+                                        <option value="14">14 Days</option>
+                                    </select>
+                                </div>
+
+                                <div class="modal-field">
+                                    <label class="modal-label"><i class="fa-solid fa-align-left"></i> Description</label>
+                                    <textarea class="modal-textarea" name="Description" style="min-height:130px" required></textarea>
+                                </div>
+                            </div>
+
+                            <div class="modal-field">
+                                <label class="modal-label"><i class="fa-solid fa-image"></i> Upload Images</label>
+                                <input type="file" name="images" multiple />
+                            </div>
+
+                            <div style="display:flex; gap:10px; margin-top:8px">
+                                <button type="submit" class="btn-modal-save"><i class="fa-solid fa-check"></i> Submit Listing</button>
+                                <button type="reset" class="btn-modal-cancel"><i class="fa-solid fa-rotate-left"></i> Clear</button>
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- BIDS PANEL -->
+            <div class="dash-panel" id="pp-bids">
+
+                <div class="dash-section">
+
+                    <div class="dash-section-hdr">
+                        <div class="dash-section-title">
+                            <i class="fa-solid fa-gavel"></i> My Bids
+                        </div>
+                    </div>
+
+                    <div style="overflow-x:auto">
+
+                        <table class="dash-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Category</th>
+                                    <th>My Bid</th>
+                                    <th>Current Bid</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                @foreach (var bid in Model.Bids)
+                                {
+                                    <tr>
+                                        <td>@bid.AuctionItem.Title</td>
+                                        <td>@bid.AuctionItem.Category.Name</td>
+                                        <td>$@bid.Amount</td>
+                                        <td>$@(bid.AuctionItem.CurrentPrice ?? bid.AuctionItem.StartingPrice)</td>
+                                        <td>@(bid.AuctionItem.IsClosed ? "Closed" : "Active")</td>
+                                    </tr>
+                                }
+
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- SETTINGS PANEL -->
+            <div class="dash-panel" id="pp-settings">
+
+                <div class="dash-section">
+
+                    <div class="dash-section-hdr">
+                        <div class="dash-section-title">
+                            <i class="fa-solid fa-user-circle"></i> Profile Information
+                        </div>
+                    </div>
+
+                    <div class="dash-section-body">
+
+                        <div class="profile-avatar-wrap">
+
+                            <div class="profile-avatar">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+
+                            <div class="profile-avatar-info">
+                                <div class="profile-name">@Model.User.FullName</div>
+                                <div class="profile-email">@Model.User.Email</div>
+                                <span class="profile-badge">@Model.User.Role</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- ═══════════ PRODUCT MODAL (ASP-Friendly) ═══════════ -->
+<div class="modal-overlay" id="productModal" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-hdr">
+            <div class="modal-title" id="productModalTitle">Edit Product</div>
+            <button class="modal-close" onclick="closeModal('productModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <!-- Hidden fields for ID and context -->
+            <input type="hidden" id="pm-id">
+            <input type="hidden" id="pm-context">
+
+            <!-- Title -->
+            <div class="modal-field">
+                <label class="modal-label"><i class="fa-solid fa-tag"></i> Title</label>
+                <input class="modal-input" id="pm-title" placeholder="Enter product title" />
+            </div>
+
+            <!-- Category -->
+            <div class="modal-field">
+                <label class="modal-label"><i class="fa-solid fa-grid-2"></i> Category</label>
+                <select class="modal-select" id="pm-cat">
+                    <option>Watches</option>
+                    <option>Art</option>
+                    <option>Electronics</option>
+                    <option>Collectibles</option>
+                    <option>Fashion</option>
+                    <option>Vehicles</option>
+                </select>
+            </div>
+
+            <!-- Starting Bid -->
+            <div class="modal-field">
+                <label class="modal-label"><i class="fa-solid fa-dollar-sign"></i> Starting Bid ($)</label>
+                <input class="modal-input" id="pm-startbid" type="number" placeholder="500" />
+            </div>
+
+            <!-- Description -->
+            <div class="modal-field">
+                <label class="modal-label"><i class="fa-solid fa-align-left"></i> Description</label>
+                <textarea class="modal-textarea" id="pm-desc" placeholder="Enter product description…"></textarea>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="closeModal('productModal')">Cancel</button>
+            <button class="btn-modal-save" onclick="saveProductModal()"><i class="fa-solid fa-check"></i> Save Product</button>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal-overlay" id="confirmModal"> <div class="confirm-box"> <div class="confirm-icon"><i class="fa-solid fa-trash"></i></div> <div class="confirm-title" id="confirmTitle">Delete item?</div> <div class="confirm-msg" id="confirmMsg">This action cannot be undone.</div> <div class="confirm-btns"> <button class="btn-modal-cancel" onclick="closeModal('confirmModal')">Cancel</button> <button class="btn-modal-save" id="confirmBtn" onclick="executeDelete()"><i class="fa-solid fa-trash"></i> Delete</button> </div> </div> </div>
